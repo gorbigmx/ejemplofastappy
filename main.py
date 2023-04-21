@@ -1,11 +1,16 @@
 from typing_extensions import deprecated
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Form
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Union
+from typing_extensions import Annotated
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
+from fastapi.templating import Jinja2Templates
+
 
 fake_users_db = {
     "juan":{
@@ -38,6 +43,10 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 SECRET_KEY = "9843afe0afea1fc1ff49e193b4fc58f2d3db93f8766e672b7cf305b8b28d36a7"
 ALGORITHM = "HS256"
+
+templates = Jinja2Templates(directory="templates")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class User(BaseModel):
     username: str
@@ -96,7 +105,7 @@ def get_user_disabled_current(user: User = Depends(get_user_current)):
 
 @app.get("/")
 def root():
-    return "Hola fastMedia"
+    return render_template('index.html')
 
 @app.get("/users/me")
 def user(user: User = Depends(get_user_disabled_current)):
@@ -104,7 +113,12 @@ def user(user: User = Depends(get_user_disabled_current)):
 
 @app.post("/token")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+    #usernamef = request.form['username']
+    #passwordf = request.form['password']
+    usernamef = Annotated[str, Form()]
+    passwordf = Annotated[str, Form()]
+    #user = authenticate_user(fake_users_db, form_data.username, form_data.password)
+    user = authenticate_user(fake_users_db, usernamef, passwordf)
     access_token_expired = timedelta(minutes=30)
     access_token_jwe = create_token({"sub": user.username}, access_token_expired)
     return {
