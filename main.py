@@ -1,5 +1,5 @@
 from typing_extensions import deprecated
-from fastapi import FastAPI, Depends, HTTPException, Form
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -104,8 +104,9 @@ def get_user_disabled_current(user: User = Depends(get_user_current)):
     return user
 
 @app.get("/")
-def root():
-    return render_template('index.html')
+def home(request: Request):
+    return templates.TemplateResponse("index.html", context={"request": request})
+    #return templates.TemplateResponse("sigin.html", context={"request": request})
 
 @app.get("/users/me")
 def user(user: User = Depends(get_user_disabled_current)):
@@ -115,8 +116,8 @@ def user(user: User = Depends(get_user_disabled_current)):
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     #usernamef = request.form['username']
     #passwordf = request.form['password']
-    usernamef = Annotated[str, Form()]
-    passwordf = Annotated[str, Form()]
+    usernamef: str = Annotated[str, Form()]
+    passwordf: str = Annotated[str, Form()]
     #user = authenticate_user(fake_users_db, form_data.username, form_data.password)
     user = authenticate_user(fake_users_db, usernamef, passwordf)
     access_token_expired = timedelta(minutes=30)
