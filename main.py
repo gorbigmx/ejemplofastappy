@@ -10,7 +10,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from fastapi.templating import Jinja2Templates
-
+from fastapi import Form
 
 fake_users_db = {
     "juan":{
@@ -112,20 +112,24 @@ def home(request: Request):
 def user(user: User = Depends(get_user_disabled_current)):
     return user
 
-@app.post("/token")
+@app.post("/token1")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    #usernamef = request.form['username']
-    #passwordf = request.form['password']
-    usernamef: str = Annotated[str, Form()]
-    passwordf: str = Annotated[str, Form()]
+    #usernamef= Annotated[str, Form()]
+    #passwordf= Annotated[str, Form()]
+    #print({"user: ":usernamef,"pass: ":passwordf})
     #user = authenticate_user(fake_users_db, form_data.username, form_data.password)
-    user = authenticate_user(fake_users_db, usernamef, passwordf)
+    user = authenticate_user(fake_users_db, usernamef:str = Form(), passwordf:str = Form())
     access_token_expired = timedelta(minutes=30)
     access_token_jwe = create_token({"sub": user.username}, access_token_expired)
     return {
         "access_token": access_token_jwe,
+        #"access_token": "tomatito",
         "token_type": "bearer"
     }
-
-#@app.post("/token")
-#def 
+    
+@app.post("/token")
+async def login(usernamef: str = Form(), passwordf: str = Form()):
+    return {
+        "name": usernamef,
+        "pass": passwordf
+    }
