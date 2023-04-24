@@ -1,16 +1,11 @@
 from typing_extensions import deprecated
-from fastapi import FastAPI, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel
 from typing import Union
-from typing_extensions import Annotated
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
-from fastapi.templating import Jinja2Templates
-from fastapi import Form
 
 fake_users_db = {
     "juan":{
@@ -43,10 +38,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 SECRET_KEY = "9843afe0afea1fc1ff49e193b4fc58f2d3db93f8766e672b7cf305b8b28d36a7"
 ALGORITHM = "HS256"
-
-templates = Jinja2Templates(directory="templates")
-
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class User(BaseModel):
     username: str
@@ -104,32 +95,22 @@ def get_user_disabled_current(user: User = Depends(get_user_current)):
     return user
 
 @app.get("/")
-def home(request: Request):
-    return templates.TemplateResponse("index.html", context={"request": request})
-    #return templates.TemplateResponse("sigin.html", context={"request": request})
+def root():
+    return "Hola fastMedia"
 
 @app.get("/users/me")
 def user(user: User = Depends(get_user_disabled_current)):
     return user
 
-@app.post("/token1")
+@app.post("/token")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    #usernamef= Annotated[str, Form()]
-    #passwordf= Annotated[str, Form()]
-    #print({"user: ":usernamef,"pass: ":passwordf})
-    #user = authenticate_user(fake_users_db, form_data.username, form_data.password)
-    user = authenticate_user(fake_users_db, usernamef:str = Form(), passwordf:str = Form())
+    user = authenticate_user(fake_users_db, form_data.username, form_data.password)
     access_token_expired = timedelta(minutes=30)
     access_token_jwe = create_token({"sub": user.username}, access_token_expired)
     return {
         "access_token": access_token_jwe,
-        #"access_token": "tomatito",
         "token_type": "bearer"
     }
-    
-@app.post("/token")
-async def login(usernamef: str = Form(), passwordf: str = Form()):
-    return {
-        "name": usernamef,
-        "pass": passwordf
-    }
+
+#@app.post("/token")
+#def 
